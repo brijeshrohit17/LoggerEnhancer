@@ -39,15 +39,22 @@ public class LoggerEnhancerService {
     private static final Logger logger = LoggerFactory.getLogger(LoggerEnhancerService.class);
 
     public List<LoggerResult> processZip(MultipartFile file) throws Exception {
+        logger.info("Logger enhancement started");
         File tempDir = ZipUtil.unzipToTemp(file);
         List<Path> javaFiles = JavaParserUtil.findJavaFiles(tempDir.toPath());
         List<LoggerResult> loggerResultList = new ArrayList<>();
         for (Path path : javaFiles) {
             String content = Files.readString(path);
-            String analysis = callChatGPT(content);
-            List<LoggerResult> loggerResult = parseResponse(analysis);
-            loggerResultList.addAll(loggerResult);
-            Files.writeString(path, analysis); // Overwrite or save backup as needed
+            String analysis = callChatGPT(PromptConstants.PROMPT_CONSTANT1+content);
+            List<LoggerResult> loggerResult1 = parseResponse(analysis);
+            loggerResultList.addAll(loggerResult1);
+            String analysis2 = callChatGPT(PromptConstants.PROMPT_CONSTANT2+content);
+            List<LoggerResult> loggerResult2 = parseResponse(analysis2);
+            loggerResultList.addAll(loggerResult2);
+            String analysis3 = callChatGPT(PromptConstants.PROMPT_CONSTANT3+content);
+            List<LoggerResult> loggerResult3 = parseResponse(analysis3);
+            loggerResultList.addAll(loggerResult3);
+            //Files.writeString(path, analysis); // Overwrite or save backup as needed
         }
         logger.info("Logger enhancement completed for {} files.", javaFiles.size());
         return loggerResultList;
@@ -74,8 +81,7 @@ public class LoggerEnhancerService {
     }
 
 
-    private String callChatGPT(String javacode) throws JsonProcessingException {
-        String prompt= PromptConstants.PROMPT_CONSTANT+javacode;
+    private String callChatGPT(String prompt) throws JsonProcessingException {
         RestTemplate restTemplate = new RestTemplate();
         Map<String, Object> request = new HashMap<>();
         request.put("model", "gpt-40");
@@ -91,9 +97,11 @@ public class LoggerEnhancerService {
         return root.get("choices").get(0).get("message").get("content").asText();
     }
 
+
+
     private String callOpenAI(String javaCode) throws IOException {
         String prompt = "Hello";
-                //"Analyze and enhance logger usage for each Java class and method..."; // Use full prompt here
+        //"Analyze and enhance logger usage for each Java class and method..."; // Use full prompt here
 
         // HttpClient code to call OpenAI API
         HttpClient client = HttpClient.newHttpClient();
